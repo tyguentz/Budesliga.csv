@@ -1,0 +1,113 @@
+---
+title: "Bungesliga"
+author: "Tyler Guentz"
+date: "5/5/2022"
+output:
+  word_document: default
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+# Required Packages:
+
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org") 
+
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org") 
+
+if(!require(ggplot2)) install.packages("ggplot2", repos = "http://cran.us.r-project.org") 
+
+if(!require(dslabs)) install.packages("dslabs", repos = "http://cran.us.r-project.org") 
+#All the required library's needed for the data.
+```
+
+### Introduction
+This project will be conducted using a 2 sample t-test. We will be viewing the data from the Bundesliga data set. Specifically we will be looking at Bayern Munich vs Borussia Dortmund. We will be attempting to see if Bayern when playing at home will win against Dortmund. All he data can be found here.<https://github.com/tyguentz/Budesliga.csv.git>. 
+
+Bayern Munich is one of the most decorated teams in Europe and has been the one, if not the best team to play in the Bundesliga ever. Dortmund is also a highly rated team and is often declared as Bayern's rival team. 
+
+
+
+The first thing we will be doing is creating the filter to get Bayern and Dortmund to allow us to just get those two teams against each other Along with the files to get started
+
+```{r,include=FALSE}
+urlfile <- "https://github.com/tyguentz/Budesliga.csv/blob/main/Bundesliga.csv?raw=true"
+Sccr <- read_csv(url(urlfile))
+Sccr <- as.data.frame(Sccr)
+str(Sccr)
+```
+
+Now we will be showing our first ggplot. 
+
+
+```{r, echo=FALSE}
+by <- Sccr %>% filter(HomeTeam == "Bayern Muenchen", AwayTeam == "Borussia Dortmund")
+by <- by %>% ggplot()
+by + geom_point(aes(Date,HomeGoals,col = HomeTeam, size = 4)) + 
+  geom_segment(aes(x=Date,xend=Date,y=HomeGoals,yend=0,size = 1)) 
+
+```
+
+
+We have this plot but it looks very sloppy, so lets clean it up and make it look better and get a better understanding at what we are seeing.
+
+```{r, echo=FALSE}
+by + geom_point(aes(Date,HomeGoals,col = HomeTeam, size = 4)) + 
+  geom_segment(aes(x=Date,xend=Date,y=HomeGoals,yend=0,size = 1)) +
+  geom_label(aes(Date,HomeGoals,label = signif(HomeGoals,5)), colour = "darkred", nudge_x = 0, fill = 2) +
+  labs(title = "Bayern Vs Dortmund Home Goals", x = "Date", y = "Home Goals") +
+  theme(legend.position="none")
+```
+
+
+As seen that when Bayern plays at home they typically score. One year they even had 11 goals in total at home vs Dortmund. This though does no prove that Bayern is beating Dortmund. As one should know, to win a game one opponent must out score the other.
+
+### Dortmund Stats
+
+For the next ggplot going to be displayed we are Dortmund's goals vs Bayern away. This will help us figure out who is really winning these games.
+
+```{r, include=FALSE}
+bcy <- Sccr %>% filter(HomeTeam == "Bayern Muenchen", AwayTeam == "Borussia Dortmund")
+head(bcy)
+bcy <- bcy %>% ggplot()
+bcy + geom_point(aes(Year,AwayGoals,col = AwayTeam, size = 4)) + 
+  geom_segment(aes(x=Year,xend=Year,y=AwayGoals,yend=0,size = 1))+
+  geom_label(aes(Year,AwayGoals,label = signif(AwayGoals,3)), colour = "Blue", nudge_x = 0, fill = 4) +
+  labs(title = "Dortmund Vs Bayern Away Goals", x = "Date", y = "Away Goals") +
+  theme(legend.position="none")
+```
+
+
+After looking at this graph and comparing it too Bayern's we can see that typically Dortmund does not have much luck on scoring against Bayern, and if they did usually Bayern would score more in the end. This would conclude that Bayern typically wins when specifically playing against Dortmund.
+
+
+Before we get too our statistical analysis we need to set up some variables to help get the correct calculations.
+
+```{r,echo=TRUE}
+Bay <- Sccr %>% filter(Sccr$HomeTeam == "Bayern Muenchen")
+Tr <- Bay %>% select(HomeGoals)
+
+```
+This selects only Bayern's Home Goals. 
+
+```{r,echo=TRUE}
+Dort <- Sccr %>% filter(Sccr$AwayTeam == "Borussia Dortmund")
+br <- Dort %>% select(AwayGoals)
+```
+
+This Selects all of Dortmund's Away goals.
+
+### T-test
+For our analysis we are going to be doing a simple 2 way t test.
+```{r,echo=TRUE}
+t.test(Tr,br)
+```
+### Conclusion
+After seeing the data, we can come to the conclusion that at a 95% confidence interval Bayern will score on average 2.65 goals at home. On the other side Dortmund only scores 1.32 goals away. This brings us to the conclusion that when Bayern plays Dortmund at home, they will win by at almost by 2 goals everytime. 
+
+
+
+
